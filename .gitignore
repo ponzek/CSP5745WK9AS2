@@ -1,0 +1,11 @@
+# Reproduce authors' repo locally (cloned separately, see README)
+repo/
+venv*/
+.mplcache/
+__pycache__/
+
+# Push PDFs only, not Word/PowerPoint sources
+*.docx
+*.pptx
+~$*
+

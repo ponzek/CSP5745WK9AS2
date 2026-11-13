@@ -1,0 +1,5 @@
+C:\Users\kponz\.matplotlib is not a writable directory
+Matplotlib created a temporary cache directory at C:\Users\kponz\AppData\Local\Temp\matplotlib-ztiyljv2 because there was an issue with the default path (C:\Users\kponz\.matplotlib); it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
+iris: U=10000 done in 75.3s -> projection_iris_U10000.png
+students: U=10000 done in 155.1s -> projection_students_U10000.png
+anuran: U=10000 done in 113.7s -> projection_anuran_U10000.png

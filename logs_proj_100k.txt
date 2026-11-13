@@ -1,0 +1,3 @@
+iris: U=100000 done in 647.3s -> projection_iris_U100000.png
+students: U=100000 done in 2670.4s -> projection_students_U100000.png
+anuran: U=100000 done in 314.4s -> projection_anuran_U100000.png
