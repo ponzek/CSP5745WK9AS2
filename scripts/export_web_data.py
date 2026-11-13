@@ -46,7 +46,7 @@ for name, (loader, cols, scale, lim, labels) in CFG.items():
     ev = align_direction_eigenvecs([np.linalg.svd(c)[0] for c in C])
     proj = [np.stack([projection_onto_subspace(ev[i][:, :2], (s - mR)[i]) for i in range(U)]) @ scale for s in sl]
     data["projections"][name] = {
-        "labels": [str(getattr(d, "name", lab)).replace("Iris-", "").title() if name != "students" else lab for d, lab in zip(dists, labels)], "colors": [hexcol(cols[i % len(cols)]) for i in range(len(dists))], "lim": lim,
+        "labels": [str(getattr(d, "name", lab)).replace("Iris-", "").title() if name == "anuran" else lab for d, lab in zip(dists, labels)], "colors": [hexcol(cols[i % len(cols)]) for i in range(len(dists))], "lim": lim,
         "frames": np.round(np.stack(proj, 1), 3).tolist(),   # [U][N][2]
     }
     print("projection", name, flush=True)
