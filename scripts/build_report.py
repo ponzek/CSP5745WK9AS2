@@ -85,6 +85,13 @@ for b, t in [
      "released code maps it to x. Reversing the eigenvector order is the same as swapping the x and z coordinates of "
      "the finished mesh, so I did that in my script and did not edit their code. After the swap, both glyphs match the "
      "paper. I kept both versions (glyph_*.png and glyph_*_swapped.png)."),
+    ("Issue 5: Iris species names shifted by one (bug in the authors' code). ",
+     "When I built the interactive page I printed the names that dataset_iris() gives each distribution. They came out as "
+     "\"Versicolor, Virginica, Virginica\" instead of \"Setosa, Versicolor, Virginica\". The loader reads iris.csv and, when "
+     "the species changes, saves the finished group of flowers under the new species name instead of the old one. The "
+     "numbers (means and covariances) are correct and in the right order, so the figures are not affected. Only the "
+     "labels are wrong. Change: my interactive page uses the correct names, and I did not edit their code. The ANURAN "
+     "loader does not have this problem."),
     ("Minor: ",
      "Matplotlib warned that C:\\Users\\...\\.matplotlib was not writable. Setting MPLCONFIGDIR to a local folder fixed it."),
 ]:
@@ -111,7 +118,9 @@ for f, cap in [("fig5_iris_glyph_comparison.png", "Fig. 5 (left): IRIS covarianc
                ("fig9_anuran_comparison.png", "Fig. 9 (right): ANURAN CALLS sampling-based projection.")]:
     image(C / f, caption=cap)
 
-para("Mini-presentation: WK9AS2_presentation.pdf in my repository.", bold_prefix="Extra credit. ")
+para("Mini-presentation: WK9AS2_presentation.pdf in my repository. Website with an interactive version "
+     "(rotatable 3D glyphs and an animation of PCA on each random version of the data): "
+     "https://ponzek.github.io/CSP5745WK9AS2/ (code: https://github.com/ponzek/CSP5745WK9AS2).", bold_prefix="Extra credit. ")
 
 out = root / "WK9AS2_completed.docx"
 doc.save(out)

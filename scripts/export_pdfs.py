@@ -3,7 +3,7 @@ import pathlib, win32com.client  # pywin32
 
 root = pathlib.Path(__file__).resolve().parents[1]
 word = win32com.client.DispatchEx("Word.Application"); word.Visible = False
-d = word.Documents.Open(str(root / "WK9AS2_completed.docx"), ReadOnly=True)
+d = word.Documents.Open(str(root / "WK9AS2_final.docx"), ReadOnly=True)
 d.SaveAs(str(root / "WK9AS2.pdf"), FileFormat=17); d.Close(False); word.Quit()
 print("saved WK9AS2.pdf")
 
