@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive – Uncertainty-Aware PCA Revisited</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="viz_data.js"></script>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;color:#4a3b5c;background:#f7f1fb;line-height:1.55}
+  header{background:linear-gradient(135deg,#c8a8e9,#e6d3f7 55%,#fbe7a1);color:#4b2e6f;padding:1.8rem 1rem;text-align:center;border-bottom:4px solid #d4a72c}
+  header h1{margin:0;font-family:"Comic Sans MS","Segoe Print",cursive}
+  main{max-width:1150px;margin:auto;padding:1rem}
+  section{background:#fff;border-radius:18px;padding:1.2rem 1.5rem;margin:1.2rem 0;box-shadow:0 3px 10px rgba(155,110,200,.18);border:2px solid #eadcf8}
+  h2{color:#7b4fb0;margin-top:0;font-family:"Comic Sans MS","Segoe Print",cursive}
+  .row{display:flex;gap:1rem;flex-wrap:wrap} .row>div{flex:1;min-width:320px}
+  .ctl{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin:.5rem 0}
+  button,select{font:inherit;border:0;border-radius:999px;padding:.4rem 1rem;background:#ffd95a;color:#5b3a86;font-weight:700;cursor:pointer;box-shadow:0 2px 0 #d4a72c}
+  button:hover{background:#fff3b8} input[type=range]{accent-color:#a77bd6;flex:1}
+  .note{background:#fdf6dc;border-left:5px solid #f3c93f;padding:.6rem 1rem;border-radius:8px}
+  a{color:#8a55c7}
+</style>
+</head>
+<body>
+<header><h1>&#127800; Interactive version &#127800;</h1>
+<p>The paper's figures are static. These views use the same data and the authors' own code. <a href="index.html">&larr; back to the reproduction</a></p></header>
+<main>
+
+<section>
+  <h2>&#10024; 1. Spin the covariance stability glyph</h2>
+  <p>Drag to rotate and scroll to zoom. A <b>thin spike</b> means that PCA direction is stable. <b>Wide, flat lobes</b> mean
+  that direction could swing around when the data wiggles, so the 2D PCA picture is less trustworthy.</p>
+  <div class="ctl"><select id="gsel"><option value="iris">IRIS</option><option value="students">STUDENT</option></select>
+    <button id="spin">&#9654; auto-rotate</button></div>
+  <div id="glyph" style="height:520px"></div>
+</section>
+
+<section>
+  <h2>&#10024; 2. Watch PCA wobble</h2>
+  <p>Every frame is one <b>possible version</b> of the dataset, drawn from each point's uncertainty. Then PCA is run on that
+  version. This is exactly the authors' sampling pipeline. The paper sums 1,000,000 of these frames into contour lines;
+  here you can watch 300 of them one at a time. The <b>faded trail</b> builds up the cloud that the contours summarize.</p>
+  <div class="ctl">
+    <select id="psel"><option value="iris">IRIS</option><option value="students">STUDENT</option><option value="anuran">ANURAN CALLS</option></select>
+    <button id="play">&#10074;&#10074; pause</button>
+    <label><input type="checkbox" id="trail" checked> trail</label>
+    <input type="range" id="frame" min="0" max="299" value="0"><span id="flab">1 / 300</span>
+  </div>
+  <div class="row">
+    <div id="proj" style="height:520px"></div>
+    <div><h3 style="margin-top:0;color:#7b4fb0">Paper's static version</h3><img id="pimg" style="width:100%;border:2px solid #f3d36b;border-radius:12px"></div>
+  </div>
+  <p class="note">&#128161; <b>How to read it:</b> if a point's dot stays in a small area, its 2D position is reliable. If it jumps
+  across the plot or swaps places with another point (ANURAN!), ordinary PCA would give you a misleading picture.</p>
+</section>
+</main>
+<footer style="text-align:center;padding:1.5rem;color:#9a7bbf">made with &#128156; &amp; &#11088; by Karina</footer>
+
+<script>
+// ---------- glyph
+const G = document.getElementById('glyph'); let spinning = false, ang = 0.8, raf;
+function drawGlyph(name){
+  const g = VIZ.glyphs[name], [x,y,z] = g.v, r = x.map((_,i)=>Math.hypot(x[i],y[i],z[i]));
+  const ax = (a)=>({title:a, showgrid:false, zeroline:true, zerolinecolor:'#555', showticklabels:false, range:[-1.05,1.05], showbackground:false});
+  Plotly.react(G, [{type:'mesh3d', x, y, z, i:g.f[0], j:g.f[1], k:g.f[2], intensity:r, colorscale:'Viridis',
+    showscale:false, flatshading:false, lighting:{ambient:.55, diffuse:.8, specular:.25}, hoverinfo:'skip'}],
+    {margin:{l:0,r:0,t:0,b:0}, paper_bgcolor:'rgba(0,0,0,0)',
+     scene:{xaxis:ax('x'), yaxis:ax('y'), zaxis:ax('z'), aspectmode:'cube', camera:{eye:{x:1.4,y:1.4,z:.55}}}},
+    {displaylogo:false, responsive:true});
+}
+function spin(){ ang += .01; Plotly.relayout(G, {'scene.camera.eye':{x:2*Math.cos(ang), y:2*Math.sin(ang), z:.55}}); raf = requestAnimationFrame(spin); }
+document.getElementById('gsel').onchange = e => drawGlyph(e.target.value);
+document.getElementById('spin').onclick = e => { spinning = !spinning; e.target.innerHTML = spinning ? '&#10074;&#10074; stop' : '&#9654; auto-rotate'; spinning ? spin() : cancelAnimationFrame(raf); };
+drawGlyph('iris');
+
+// ---------- projection animation
+const P = document.getElementById('proj'), fr = document.getElementById('frame'), flab = document.getElementById('flab');
+const IMG = {iris:'figures/reproduced/projection_iris_U100000.png', students:'figures/reproduced/projection_students_U100000.png', anuran:'figures/reproduced/projection_anuran_U100000.png'};
+let cur = 'iris', t = 0, playing = true, timer;
+function setupProj(name){
+  cur = name; t = 0; const d = VIZ.projections[name], N = d.labels.length;
+  document.getElementById('pimg').src = IMG[name];
+  const traces = [];
+  d.labels.forEach((lab,i)=>traces.push({x:[],y:[],mode:'markers',type:'scattergl',name:lab+' (trail)',showlegend:false,hoverinfo:'skip',marker:{color:d.colors[i],size:4,opacity:.18}}));
+  d.labels.forEach((lab,i)=>traces.push({x:[d.frames[0][i][0]],y:[d.frames[0][i][1]],mode:'markers',type:'scatter',name:lab,marker:{color:d.colors[i],size:16,line:{color:'#fff',width:2}}}));
+  const L = d.lim;
+  Plotly.react(P, traces, {margin:{l:10,r:10,t:10,b:10}, paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'#fff',
+    xaxis:{range:[-L,L], showticklabels:false, zerolinecolor:'#bbb', gridcolor:'#f3ecfa'},
+    yaxis:{range:[-L,L], showticklabels:false, zerolinecolor:'#bbb', gridcolor:'#f3ecfa', scaleanchor:'x'},
+    legend:{orientation:'h', y:-0.02}}, {displaylogo:false, responsive:true});
+  showFrame(0);
+}
+function showFrame(k){
+  const d = VIZ.projections[cur], N = d.labels.length, trail = document.getElementById('trail').checked;
+  const xs=[], ys=[], idx=[];
+  for(let i=0;i<N;i++){
+    const upto = trail ? d.frames.slice(0,k+1) : [];
+    xs.push(upto.map(f=>f[i][0])); ys.push(upto.map(f=>f[i][1])); idx.push(i);
+    xs.push([d.frames[k][i][0]]); ys.push([d.frames[k][i][1]]); idx.push(N+i);
+  }
+  const order = []; for(let i=0;i<N;i++){ order.push(i, N+i); }
+  Plotly.restyle(P, {x:xs, y:ys}, order);
+  fr.value = k; flab.textContent = (k+1)+' / '+d.frames.length;
+}
+function tick(){ if(!playing) return; t = (t+1) % VIZ.projections[cur].frames.length; showFrame(t); timer = setTimeout(tick, 90); }
+document.getElementById('psel').onchange = e => setupProj(e.target.value);
+document.getElementById('play').onclick = e => { playing = !playing; e.target.innerHTML = playing ? '&#10074;&#10074; pause' : '&#9654; play'; if(playing) tick(); };
+fr.oninput = e => { playing = false; document.getElementById('play').innerHTML='&#9654; play'; t = +e.target.value; showFrame(t); };
+document.getElementById('trail').onchange = () => showFrame(t);
+setupProj('iris'); tick();
+</script>
+</body>
+</html>
